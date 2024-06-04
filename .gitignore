@@ -1,3 +1,12 @@
+# Ignore project folders
+saved_model/*
+data/*
+data_map/*
+figs/*
+vis/*
+vis_pp/*
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
