@@ -32,16 +32,29 @@ Training for BotCL:
 python main_contrast.py --num_classes 50 --num_cpt 20 --base_model resnet18 --lr 0.0001 --epoch 60 --lr_drop 40 --dataset CUB200 --dataset_dir "your dir" --weak_supervision_bias 0.1 --quantity_bias 0.1 --distinctiveness_bias 0.05 --consistence_bias 0.01
 ```
 
+#### Custom
+
+```
+python main_contrast.py --num_classes 15 --num_cpt 20 --base_model resnet18 --lr 0.0001 --epoch 60 --lr_drop 40 --pre_train True --dataset HAR --dataset_dir "data/HAR/Human Action Recognition/"
+
+python main_contrast.py --num_classes 15 --num_cpt 20 --base_model resnet18 --lr 0.0001 --epoch 80 --lr_drop 40 --dataset HAR --dataset_dir "data/HAR/Human Action Recognition/" --weak_supervision_bias 0.1 --quantity_bias 0.1 --distinctiveness_bias 0.05 --consistence_bias 0.01
+```
+
 Use the following commend to visualize the learned concept.
 
 ```
 First run process.py to extarct the activation for all dataset samples:
-python process.py
 
 python process.py --dataset CUB200 --dataset_dir 'F:\Dataset\'
 
 Then see the generated concepts by:
 python vis_contrast.py --num_classes 50 --num_cpt 20 --base_model resnet18 --index 100 --top_sample 20 --dataset CUB200 --dataset_dir 'F:\Dataset\'
+```
+
+```
+python process.py --dataset HAR --num_cpt 20 --num_classes 15 --dataset_dir 'data/HAR/Human Action Recognition/'
+
+python vis_contrast.py --num_classes 15 --num_cpt 20 --base_model resnet18 --index 100 --top_sample 5 --dataset HAR --dataset_dir 'data/HAR/Human Action Recognition/'
 ```
 
 ## Publication

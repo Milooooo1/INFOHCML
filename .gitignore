@@ -5,6 +5,7 @@ data_map/*
 figs/*
 vis/*
 vis_pp/*
+*.png
 
 
 # Byte-compiled / optimized / DLL files

@@ -24,7 +24,8 @@ def train(args, model, device, loader, optimizer, epoch):
 
     model.train()
     for batch_idx, (data, label) in enumerate(loader):
-        data, label = data.to(device, dtype=torch.float32), label.to(device, dtype=torch.int64)
+        data = data.to(device, dtype=torch.float32)
+        label = label.to(device, dtype=torch.int64)
         if not args.pre_train:
             cpt, pred, att, update = model(data)
             retri_loss, quantity_loss = get_retrieval_loss(args, cpt, label, args.num_classes, device)

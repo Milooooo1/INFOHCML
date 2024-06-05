@@ -14,6 +14,7 @@ def main():
     model = MainModel(args)
     device = torch.device(args.device)
     model.to(device)
+    args.dataset_dir = args.dataset_dir.replace('"', "")
     checkpoint = torch.load(os.path.join(args.output_dir,
             f"{args.dataset}_{args.base_model}_cls{args.num_classes}_cpt{args.num_cpt}_" +
     f"{'use_slot_' + args.cpt_activation if not args.pre_train else 'no_slot'}.pt"), map_location="cuda:0")

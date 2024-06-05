@@ -3,6 +3,7 @@ from torch.utils.data.dataloader import DataLoader
 from loaders.CUB200 import CUB_200
 from loaders.ImageNet import ImageNet
 from loaders.matplob import Matplot, MakeImage
+from loaders.HAR import HAR
 import numpy as np
 from PIL import Image
 import torch
@@ -62,7 +63,7 @@ def get_transform(args):
         transform = transforms.Compose([transforms.Resize([args.img_size, args.img_size]), transforms.ToTensor(),
                                         transforms.Normalize([0.5071, 0.4867, 0.4408], [0.2675, 0.2565, 0.2761])])
         return {"train": transform, "val": transform}
-    elif args.dataset == "CUB200" or args.dataset == "ImageNet" or args.dataset == "imagenet":
+    elif args.dataset == "CUB200" or args.dataset == "ImageNet" or args.dataset == "imagenet" or args.dataset == "HAR":
         transform_train = get_train_transformations(args, [[0.485, 0.456, 0.406], [0.229, 0.224, 0.225]])
         transform_val = get_val_transformations(args, [[0.485, 0.456, 0.406], [0.229, 0.224, 0.225]])
         return {"train": transform_train, "val": transform_val}
@@ -90,6 +91,10 @@ def select_dataset(args, transform):
     elif args.dataset == "CUB200":
         dataset_train = CUB_200(args, train=True, transform=transform["train"])
         dataset_val = CUB_200(args, train=False, transform=transform["val"])
+        return dataset_train, dataset_val
+    elif args.dataset == "HAR":
+        dataset_train = HAR(args, train=True, transform=transform["train"])
+        dataset_val = HAR(args, train=False, transform=transform["val"])
         return dataset_train, dataset_val
     elif args.dataset == "ImageNet" or args.dataset == "imagenet":
         dataset_train = ImageNet(args, "train", transform=transform["train"])
@@ -175,3 +180,13 @@ def load_all_imgs(args):
         train_imgs, train_labels = filter(train)
         val_imgs, val_labels = filter(val)
         return train_imgs, train_labels, val_imgs, val_labels
+    elif args.dataset == "HAR" or args.dataset == "HumanActionRecognition":
+        train = HAR(args, True)
+        val = HAR(args, False)
+        cat = np.arange(1, args.num_classes+1, 1)
+        
+        train_imgs = [os.path.join(train.images_folder, t) for t in train.image_names]
+
+        val_imgs = [os.path.join(val.images_folder, t) for t in val.image_names]
+
+        return train_imgs, train.mapped_labels, val_imgs, val.mapped_labels, cat
