@@ -26,10 +26,10 @@ python vis_recon.py --num_classes 10 --num_cpt 20 --index 0 --top_sample 20 --de
 We first pre-train the backbone and then train the whole model. For ImageNet and Custom, just change the name for dataset.
 ```
 Pre-training of backbone:
-python main_contrast.py --num_classes 50 --num_cpt 20 --base_model resnet18 --lr 0.0001 --epoch 60 --lr_drop 40 --pre_train True --dataset CUB200 --dataset_dir "your dir"
+python main_contrast.py --num_classes 50 --num_cpt 20 --base_model resnet18 --lr 0.0001 --epoch 80 --lr_drop 40 --pre_train True --dataset CUB200 --dataset_dir "your dir"
 
 Training for BotCL:
-python main_contrast.py --num_classes 50 --num_cpt 20 --base_model resnet18 --lr 0.0001 --epoch 60 --lr_drop 40 --dataset CUB200 --dataset_dir "your dir" --weak_supervision_bias 0.1 --quantity_bias 0.1 --distinctiveness_bias 0.05 --consistence_bias 0.01
+python main_contrast.py --num_classes 50 --num_cpt 20 --base_model resnet18 --lr 0.0001 --epoch 80 --lr_drop 40 --dataset CUB200 --dataset_dir "your dir" --weak_supervision_bias 0.1 --quantity_bias 0.1 --distinctiveness_bias 0.05 --consistence_bias 0.01
 ```
 
 #### Custom
