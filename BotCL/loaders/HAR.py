@@ -13,7 +13,7 @@ class HAR(Dataset):
         self.transform = transform
         
         # Load the dataset from the CSV file !! UPDATE THIS LINE IF
-        data = pd.read_csv(args.dataset_dir + "data.csv")
+        data = pd.read_csv(args.dataset_dir + "/data.csv")
         
         # Select the subset of the data based on the split
         if self.train:
@@ -23,10 +23,12 @@ class HAR(Dataset):
         
         self.image_names = self.data['image'].values
         self.labels = self.data['label'].values
-        self.images_folder = args.dataset_dir + "train/"
+        self.images_folder = args.dataset_dir + "/train/"
         
         # Create a label mapping to ensure consistent label numbers
         self.label_mapping = {label: idx for idx, label in enumerate(sorted(set(self.labels)))}
+        print("Labels have been mapped according to this dictionairy:")
+        print(self.label_mapping)
         self.inverse_label_mapping = {idx: label for label, idx in self.label_mapping.items()}
         self.mapped_labels = [self.label_mapping[label] for label in self.labels]
     

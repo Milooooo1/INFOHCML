@@ -25,8 +25,11 @@ def main():
 
     print('Waiting for generating from database')
     database_hash, database_labels, database_acc = predict_hash_code(args, model, train_loader2, device)
+    print(f"Database accuracy: {database_acc}")
+
     print('Waiting for generating from test set')
     test_hash, test_labels, test_acc = predict_hash_code(args, model, val_loader, device)
+    print(f"Test accuracy: {test_acc}")
 
     f = h5py.File(f"data_map/{args.dataset}_{args.base_model}_cls{args.num_classes}_cpt{args.num_cpt}_{args.cpt_activation}.hdf5", "w")
     d1 = f.create_dataset("database_hash", data=database_hash)

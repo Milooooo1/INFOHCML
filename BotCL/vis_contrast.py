@@ -10,6 +10,7 @@ from loaders.get_loader import load_all_imgs, get_transform
 from utils.tools import for_retrival, attention_estimation
 import h5py
 from utils.draw_tools import draw_bar, draw_plot
+import pathlib
 import shutil
 from utils.tools import crop_center
 import cv2
@@ -45,57 +46,71 @@ def main():
     # att_record = attention_estimation(imgs_database, labels_database, model, transform, device, name=name)
     # draw_plot(att_record, name)
 
-    data = imgs_database[index]
-    label = labels_database[index]
+    for index in list(range(args.index, min(args.index+1000, len(imgs_val)))):
+        print(f"\n\nProcessing index: {index}\n")
+        data = imgs_val[index]
+        label = labels_val[index]
 
-    print("-------------------------")
-    print("label true is: ", cat[label])
-    print("-------------------------")
-    # data = "/home/wangbowen/DATA/ImageNet/ILSVRC/Data/CLS-LOC/train/n01494475/n01494475_618.JPEG"
-    if args.dataset == "MNIST":
-        img_orl = Image.fromarray(data.numpy()).resize([224, 224], resample=Image.BILINEAR)
-    elif args.dataset == "cifar10":
-        img_orl = Image.fromarray(data).resize([224, 224], resample=Image.BILINEAR)
-    else:
-        img_orl = Image.open(data).convert('RGB').resize([256, 256], resample=Image.BILINEAR)
+        print("-------------------------")
+        print("label true is: ", cat[label])
+        print("-------------------------")
+        # data = "/home/wangbowen/DATA/ImageNet/ILSVRC/Data/CLS-LOC/train/n01494475/n01494475_618.JPEG"
+        if args.dataset == "MNIST":
+            img_orl = Image.fromarray(data.numpy()).resize([224, 224], resample=Image.BILINEAR)
+        elif args.dataset == "cifar10":
+            img_orl = Image.fromarray(data).resize([224, 224], resample=Image.BILINEAR)
+        else:
+            img_orl = Image.open(data).convert('RGB').resize([256, 256], resample=Image.BILINEAR)
 
-    img_orl2 = crop_center(img_orl, 224, 224)
-    img_orl2.save(f'vis/origin.png')
-    cpt, pred, att, update = model(transform(img_orl).unsqueeze(0).to(device), None, None)
-    print("-------------------------")
-    pp = torch.argmax(pred, dim=-1)
-    print("predicted as: ", cat[pp])
+        img_orl2 = crop_center(img_orl, 224, 224)
+        img_orl2.save(f'vis/origin.png')
+        cpt, pred, att, update = model(transform(img_orl).unsqueeze(0).to(device), None, None)
+        # print("-------------------------")
+        pp = torch.argmax(pred, dim=-1)
+        print("predicted as: ", cat[pp])
 
-    w = model.state_dict()["cls.weight"][label]
-    w_numpy = np.around(torch.tanh(w).cpu().detach().numpy(), 4)
-    ccc = np.around(cpt.cpu().detach().numpy(), 4)
-    # draw_bar(w_numpy, name)
+        if cat[pp] != cat[label]:
 
-    print("--------weight---------")
-    print(w_numpy)
+            w = model.state_dict()["cls.weight"][label]
+            w_numpy = np.around(torch.tanh(w).cpu().detach().numpy(), 4)
+            ccc = np.around(cpt.cpu().detach().numpy(), 4)
+            # draw_bar(w_numpy, name)
 
-    print("--------cpt---------")
-    print(ccc)
+            print("--------weight---------")
+            print(w_numpy)
 
-    print("------sum--------")
-    print((ccc/2 + 0.5) * w_numpy)
-    # if args.use_weight:
-    #     w[w < 0] = 0
-    #     cpt, pred, att, update = model(transform(img_orl).unsqueeze(0).to(device), w)
+            print("--------cpt---------")
+            print(ccc)
 
-    for id in range(args.num_cpt):
-        print("-------------")
-        # slot_image = np.array(Image.open(f'vis/0_slot_{id}.png'))
-        slot_image = cv2.imread(f'vis/0_slot_{id}.png', cv2.IMREAD_GRAYSCALE)
-        heatmap_only, heatmap_on_image = apply_colormap_on_image(img_orl2, slot_image, 'jet')
-        heatmap_on_image.save("vis/" + f'0_slot_mask_{id}.png')
+            print("------sum--------")
+            print((ccc/2 + 0.5) * w_numpy)
+            # if args.use_weight:
+            #     w[w < 0] = 0
+            #     cpt, pred, att, update = model(transform(img_orl).unsqueeze(0).to(device), w)
+
+            for id in range(args.num_cpt):
+                # print("-------------")
+                # slot_image = np.array(Image.open(f'vis/0_slot_{id}.png'))
+                slot_image = cv2.imread(f'vis/0_slot_{id}.png', cv2.IMREAD_GRAYSCALE)
+                heatmap_only, heatmap_on_image = apply_colormap_on_image(img_orl2, slot_image, 'jet')
+                heatmap_on_image.save("vis/" + f'0_slot_mask_{id}.png')
+
+            source_dir = pathlib.Path(r"C:\Users\Milo\OneDrive - Universiteit Utrecht\Period 4\INFOMHCML\Project\BotCL\BotCL\vis")
+            dest_dir = pathlib.Path(r"C:\Users\Milo\OneDrive - Universiteit Utrecht\Period 4\INFOMHCML\Project\BotCL\BotCL\faultyclassifications\Test")
+
+            dest_dir = dest_dir / pathlib.Path(f"{index}_{cat[pp]}as{cat[label]}")
+            dest_dir.mkdir()
+
+            for file in source_dir.iterdir():
+                if file.is_file(): 
+                    shutil.copy(file, dest_dir / file.name)
 
     # get retrieval cases
-    f1 = h5py.File(f"data_map/{args.dataset}_{args.base_model}_cls{args.num_classes}_cpt{args.num_cpt}_{args.cpt_activation}.hdf5", 'r')
-    database_hash = f1["database_hash"]
-    database_labels = f1["database_labels"]
-    test_hash = f1["test_hash"]
-    test_labels = f1["test_labels"]
+    # f1 = h5py.File(f"data_map/{args.dataset}_{args.base_model}_cls{args.num_classes}_cpt{args.num_cpt}_{args.cpt_activation}.hdf5", 'r')
+    # database_hash = f1["database_hash"]
+    # database_labels = f1["database_labels"]
+    # test_hash = f1["test_hash"]
+    # test_labels = f1["test_labels"]
 
     # query_sample = np.array([database_hash[index]])
     # query_sample[0][location] = -1
@@ -106,31 +121,31 @@ def main():
     #     img_re = Image.open(imgs_database[current_is]).convert('RGB').resize([224, 224], resample=Image.BILINEAR)
     #     img_re.save(f"retrieval_results/re_{i}.png")
 
-    print("-------------------------")
-    print("generating concept samples")
+    # print("-------------------------")
+    # print("generating concept samples")
 
-    for j in range(args.num_cpt):
-        root = 'vis_pp/' + "cpt" + str(j) + "/"
-        os.makedirs(root, exist_ok=True)
-        selected = np.array(database_hash)[:, j]
-        ids = np.argsort(-selected, axis=0)
-        idx = ids[:args.top_samples]
-        for i in range(len(idx)):
-            current_is = idx[i]
-            category = cat[int(database_labels[current_is][0])]
-            if args.dataset == "MNIST":
-                img_orl = Image.fromarray(imgs_database[current_is].numpy())
-            elif args.dataset == "cifar10":
-                img_orl = Image.fromarray(imgs_database[current_is])
-            else:
-                img_orl = Image.open(imgs_database[current_is]).convert('RGB')
-            img_orl = img_orl.resize([256, 256], resample=Image.BILINEAR)
-            img_orl2 = crop_center(img_orl, 224, 224)
-            cpt, pred, att, update = model(transform(img_orl).unsqueeze(0).to(device), None, [i, category, j])
-            img_orl2.save(root + f'/orl_{i}_{category}.png')
-            slot_image = np.array(Image.open(root + f'mask_{i}_{category}.png'), dtype=np.uint8)
-            heatmap_only, heatmap_on_image = apply_colormap_on_image(img_orl2, slot_image, 'jet')
-            heatmap_on_image.save(root + f'jet_{i}_{category}.png')
+    # for j in range(args.num_cpt):
+    #     root = 'vis_pp/' + "cpt" + str(j) + "/"
+    #     os.makedirs(root, exist_ok=True)
+    #     selected = np.array(database_hash)[:, j]
+    #     ids = np.argsort(-selected, axis=0)
+    #     idx = ids[:args.top_samples]
+    #     for i in range(len(idx)):
+    #         current_is = idx[i]
+    #         category = cat[int(database_labels[current_is][0])]
+    #         if args.dataset == "MNIST":
+    #             img_orl = Image.fromarray(imgs_database[current_is].numpy())
+    #         elif args.dataset == "cifar10":
+    #             img_orl = Image.fromarray(imgs_database[current_is])
+    #         else:
+    #             img_orl = Image.open(imgs_database[current_is]).convert('RGB')
+    #         img_orl = img_orl.resize([256, 256], resample=Image.BILINEAR)
+    #         img_orl2 = crop_center(img_orl, 224, 224)
+    #         cpt, pred, att, update = model(transform(img_orl).unsqueeze(0).to(device), None, [i, category, j])
+    #         img_orl2.save(root + f'/orl_{i}_{category}.png')
+    #         slot_image = np.array(Image.open(root + f'mask_{i}_{category}.png'), dtype=np.uint8)
+    #         heatmap_only, heatmap_on_image = apply_colormap_on_image(img_orl2, slot_image, 'jet')
+    #         heatmap_on_image.save(root + f'jet_{i}_{category}.png')
 
 
 if __name__ == '__main__':
